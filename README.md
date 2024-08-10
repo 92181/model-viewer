@@ -29,4 +29,5 @@ Images here WIP
 This STL file viewer is provided under the MIT attribution license. 
 
 It uses various vector images, also known as SVG's from the Bootstrap SVG collection.
+
 It also uses a modified version of the [THREE.InfiniteGridHelper](https://github.com/Fyrestar/THREE.InfiniteGridHelper) by Fyrestar.
