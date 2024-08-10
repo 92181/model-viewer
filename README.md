@@ -22,9 +22,9 @@ Various keybinds that can be used are......
 - `Y` To open the mesh option menu.
 - `H` To hide or unhide the selected mesh.
 
-It can be run locally by navigating to the project directory and running the following command, afterwards use a browser at localhost:8000 to connect.
+It can be run locally by navigating to the project directory and running the following command, then use a your preferred browser to load the page.
 ```bash
-python -m SimpleHTTPServer
+python -m SimpleHTTPServer // Access at localhost:8000
 ```
 
 # Images
