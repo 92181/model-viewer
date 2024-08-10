@@ -9,6 +9,8 @@ Various things that can be done are...
 * Rotate, scale and transform imported STL files, indepently or together.
 * Choose which mesh gets displayed and which will not, optimal for an efficient viewing experience.
 
+View the live version here at my personal website, [LINK](https://pages.798.dev).
+
 # Usage
 The STL file viewer at it's core is an easy program to audit multiple STL files at the same time. The key functionality can be accessed through the canvas UI, or with the keybinds below.
 
