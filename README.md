@@ -9,7 +9,7 @@ Various things that can be done are...
 * Rotate, scale and transform imported STL files, indepently or together.
 * Choose which mesh gets displayed and which will not, optimal for an efficient viewing experience.
 
-You can view the [live demo](https://798.pages.dev) over at my personal site.
+You can view the [live demo](798.pages.dev/s/viewer) over at my personal site.
 
 # Usage
 The STL file viewer at it's core is an easy program to audit multiple STL files at the same time. The key functionality can be accessed through the canvas UI, or with the keybinds below.
@@ -31,7 +31,11 @@ python -m SimpleHTTPServer // Access at localhost:8000
 ```
 
 # Images
-Images here WIP
+<p align="center">
+  <img src="./images/0.png" width="45%">
+  &nbsp; &nbsp; &nbsp; &nbsp;
+  <img src="./images/1.png" width="45%">
+</p>
 
 # License & Attribution
 This STL file viewer is provided under the MIT attribution license. 
