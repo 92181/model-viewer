@@ -324,14 +324,14 @@
     {
         let i=0;while(i<qt)
         {
-            z=qm[i],d=a=z+5;let m=qk[z+3],e=g=qk[z+1],j=qk[z+2];
+            z=a=qm[i],d=z+5;let m=qk[z+3],e=g=qk[z+1],j=qk[z+2];
 
             // Handle UI And Remove From Scene;
-            scene.remove(m);m.geometry.dispose();let s=qi+qz*((e-5)/5);g4.clearRect(gc*18,s-gc*21,gc*257,gc*32);while(a<qw){f22(a,1);a+=5}
+            scene.remove(m);m.geometry.dispose();g4.clearRect(gc*18,(qi+qz*((qw-10)/5))-gc*21,gc*257,gc*32);
 
             // Shift Back Cf And Qk (Remove Empty Space);
             f28(d,j-e);while(z<qw){qk[z]=qk[d];qk[z+1]=qk[d+1];qk[z+2]=qk[d+2];qk[z+3]=qk[d+3];qk[z+4]=qk[d+4];z+=5;d+=5}
-            while(j<i4){cf[g]=cf[j];j+=1;g+=1}i4=g;
+            while(j<i4){cf[g]=cf[j];j+=1;g+=1}i4=g;qw-=5;qt-=1;qm.shift();while(a<qw){f22(a,0);a+=5}
 
             i+=1;
         }
@@ -511,7 +511,7 @@
                   }
                }
             }
-            else // so the enter and escape for the menu should be here!
+            else if(!e.metaKey)
             {
                 if(k6>0) // clear certain inputs, hide window.
                 {
@@ -524,7 +524,7 @@
                     case"KeyT":{k6=2;gpq=6;f21("Resizing","Scale");break}
                     case"KeyH":{z=qm[0];if(qk[z+4]){f35()}else{f36()}break}
                     case"KeyP":{g6.click();break}
-                    case"KeyX":{f26();break}
+                    case"KeyX":{f26();break} // fix!
                     case"KeyY":{if(qt>0){k6=4;f29()}break}
                     case"KeyZ":{if(gx>0){ax=3}break}
                     case"KeyG":{k6=3;f23();if(ku){ku=0}else{ku=1}break}
@@ -723,7 +723,11 @@
         }
 
         window.oncontextmenu=function(e){e.preventDefault()};
-        
+
+        // Load Files From Server;
+        res=await fetch('./torus.stl');qk[qw]='Torus STL';f13(await res.arrayBuffer());
+        res=await fetch('./fan.stl');qk[qw]='Turbine Fan';f13(await res.arrayBuffer());
+
         // Render Loop;
         function f0()
         {
