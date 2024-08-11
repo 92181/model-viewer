@@ -23,6 +23,7 @@ Various keybinds that can be used are......
 - `P` If you want to import either an ASCII or binary STL file.
 - `Y` To open the mesh option menu.
 - `H` To hide or unhide the selected mesh.
+- `X` To remove one or multiple meshes from the scene.
 
 It can be run locally by navigating to the project directory and running the following command, then use a your preferred browser to load the page.
 ```bash
