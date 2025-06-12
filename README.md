@@ -1,4 +1,7 @@
 # WEBGL STL Viewer
+
+WIP;
+
 A tiny STL file viewer with powerful, yet limited capability. It can be used as a STL file editor.
 This project has it's origins as an advanced NURB modeler, however I decided to branch out a part of the program and created this STL file viewer.
 
