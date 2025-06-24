@@ -1,757 +1,281 @@
-<!doctype html><html><head><title>STL Viewer</title><script src="static/three.js"></script><script src="static/grid.js"></script></head>
-<body style="margin:0;overflow:hidden"><canvas c0 style="position:absolute"></canvas><canvas c1 style="position:absolute"></canvas><input style="display:none;" type="file"/>
-<script>
-    // Set Color Theme;
-    if(1){r1=0;document.body.style.background="#000"}else{r1=0xffffff;document.body.style.background="#fff"}g3=document.querySelector("[c1]");CanvasGL=document.querySelector("[c0]");g4=g3.getContext("2d");g6=document.querySelector("input");r3=window.devicePixelRatio;if(r3>1){gc=screen.width*(r3*1.5)/2200}else{gc=screen.width/2200}o0=o1=o2=0;
+<!doctype html>
+<html>
+<head>
+  <title>Tellurium - Model Manipulator</title>
+  <link rel="icon" href="data:," type="image/x-icon">
+  <script src="static/three.js"></script>
+  <meta charset="utf-8">
 
-    // Rotate Specified Vertices Of Array Around Specified Point;
-    function rotateVertices(vertices,start,end,angleX,angleY,angleZ)
-    {
-        const cosX = Math.cos(angleX);const sinX = Math.sin(angleX);const cosY = Math.cos(angleY);const sinY = Math.sin(angleY);const cosZ = Math.cos(angleZ);const sinZ = Math.sin(angleZ);
-
-        for (let i = start; i < end; i += 3)
-        {
-            // Translate the vertex to the origin
-            const x = vertices[i] - o0;
-            const y = vertices[i + 1] - o1;
-            const z = vertices[i + 2] - o2;
-
-            // Rotate around the x-axis
-            const newX = x;
-            const newY = y * cosX - z * sinX;
-            const newZ = y * sinX + z * cosX;
-
-            // Rotate around the y-axis
-            const finalX = newX * cosY + newZ * sinY;
-            const finalY = newY;
-            const finalZ = -newX * sinY + newZ * cosY;
-
-            // Rotate around the z-axis
-            vertices[i] = finalX * cosZ - finalY * sinZ + o0;
-            vertices[i + 1] = finalX * sinZ + finalY * cosZ + o1;
-            vertices[i + 2] = finalZ + o2;
-        }
-
-        //return vertices;
+  <style>
+    @font-face{font-family: 'Ubuntu'; src: url('static/ubuntu.woff2')}
+    :root {
+      --brdr-color: rgb(30, 30, 30);
+      --brdr: 0.1rem solid rgb(30, 30, 30);
+      --bkgr-color: #000;
     }
 
-    function scaleMesh(vertices,start,end,scaleX,scaleY,scaleZ)
-    {
-        for (let i = start; i < end; i += 3)
-        {
-            let x = vertices[i];
-            let y = vertices[i + 1];
-            let z = vertices[i + 2];
+    body {
+      color: #fff;
+      font-family: 'Ubuntu';
+      background: var(--bkgr-color);
+      margin: 0;
+      overflow: hidden;
+    }
+    select, input {
+      all: unset;
+      cursor: initial;
+      text-overflow: ellipsis;
+      width: 100%;
+    }
+    input:focus {
+      text-overflow: initial;
+    }
+    canvas {
+      border: var(--brdr);
+      border-radius: 1.5rem;
+      outline: none;
+      width: 100%;
+    }
+    #main {
+      display: flex;
+      box-sizing: border-box;
+      flex-direction: column;
+      padding: 0.8rem 1rem;
+      gap: 0.9rem;
+      height: 100vh;
+    }
+    #content {
+      position: relative;
+      display: flex;
+      height: 100%;
+    }
+    #sidebar {
+      display: flex;
+      flex-direction: column;
+      border-top: var(--brdr);
+      min-width: 15rem;
+      padding-top: 1rem;
+      margin-right: 1rem;
+    }
+    #header {
+      display: flex; 
+      align-items: center;
+      & svg {
+        cursor: pointer;
+      }
+    }
+    #search {
+      display: flex;
+      padding: 0.3rem 0.5rem;
+      border: var(--brdr);
+      border-radius: 0.75rem;
+      flex-basis: 40%;
+      max-width: 400px;
+      margin: auto;
 
-            x -= o0;
-            y -= o1;
-            z -= o2;
+      input {
+        font-size: 13.4px;
+        padding: 1px 2px;
+      }
+    }
+    #main svg {
+      width: 17px;
+    }
+    #elist {
+      position: relative;
+      margin-bottom: auto;
+    }
+    .entry {
+      display: flex;
+      margin: 0.2rem 0;
+      user-select: none;
+      margin-right: 9.5px;
+      gap: 0.5rem;
 
-            x *= scaleX;
-            y *= scaleY;
-            z *= scaleZ;
-
-            x += o0;
-            y += o1;
-            z += o2;
-
-            vertices[i] = x;
-            vertices[i + 1] = y;
-            vertices[i + 2] = z;
-        }
-
-        //return vertices;
+      input {
+        pointer-events: none;
+      }
+      svg {
+        min-width: 17px;
+      }
+      svg:nth-child(3) {
+        margin-left: auto;
+      }
+    }
+    #add {
+      width: 20px !important;
+      border-radius: 20rem;
+      background: var(--brdr-color);
+      padding: 8px;
+      cursor: pointer;
     }
 
-    // Move Vertices;
-    function MoveXYZ(vertices,start,end,x,y,z)
-    {
-        while(start<end){vertices[start]+=x;vertices[start+1]+=y;vertices[start+2]+=z;start+=3}
+    #cntx {
+      display: none;
+      width: 22rem;
+      position: absolute;
+      left: 18rem; 
+      bottom: 2rem;
+      border: var(--brdr);
+      border-radius: 1.5rem;
+      background: var(--bkgr-color);
+      padding: 1rem;
+
+      & > div:first-child {
+        display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1rem;
+        font-size: 1.2rem;
+      }
+      #cnts > * {
+        display: flex; 
+        align-items: center; 
+        gap: 0.5rem;
+      }
+    }
+    #cntx input, .bn {
+      border: var(--brdr);
+      border-radius: 0.6rem;
+      padding: 0.2rem 0.5rem;
+      text-align: center;
     }
 
-    // Compute Normals For Lighting;
-    function computeVertexN(faceArray)
-    {
-        let normals = [];
-
-        for (let i = 0; i < faceArray.length; i += 9)
-        {
-            let v0 = new THREE.Vector3(faceArray[i], faceArray[i + 1], faceArray[i + 2]);
-            let v1 = new THREE.Vector3(faceArray[i + 3], faceArray[i + 4], faceArray[i + 5]);
-            let v2 = new THREE.Vector3(faceArray[i + 6], faceArray[i + 7], faceArray[i + 8]);
-
-            let normal = new THREE.Vector3().crossVectors(v1.clone().sub(v0), v2.clone().sub(v0)).normalize();
-
-            normals.push(normal.x, normal.y, normal.z);
-            normals.push(normal.x, normal.y, normal.z);
-            normals.push(normal.x, normal.y, normal.z);
-        }
-
-        return normals;
+    .slct {
+      display: none;
+      position: relative;
     }
 
-    // Set Mesh UI Entry At Specified Color & Position;
-    function f22(q,l)
-    {
-        let z=qi+qz*((q-5)/5);g4.beginPath();g4.font=gc*16+`px 'u'`;g4.lineWidth=gc;g4.clearRect(gc*18,z-gc*21,gc*259,gc*32);g4.roundRect(gc*20,z-gc*19,gc*255,gc*28,gc*6);
-        
-        // Is The Entry Active, Decide Color;
-        if(l)
-        {
-            g4.fillStyle=g4.strokeStyle="#fff";g4.fill();g4.fillStyle="#000";
-        }
-        else
-        {
-            g4.fillStyle="#fff";g4.strokeStyle="#404040";g4.stroke();
-        }
+    .bn  {
+      display: flex; 
+      align-items: center;
+      user-select: none;
+      width: 100%;
 
-        g4.translate(gc*237,z-gc*10);g4.scale(gc*1.1,gc*1.1);g4.fill(tuu);g4.setTransform(1,0,0,1,0,0);
-        g4.translate(gc*30,z-gc*14);g4.scale(gc*1.1,gc*1.1);g4.fill(tya);g4.setTransform(1,0,0,1,0,0);
-        
-        g4.fillText(qk[q],gc*56,z);
+      & > *:first-child {
+        width: 100%;
+      }
     }
 
-    // Add Mesh To Scene And Call Function 22 For UI, Also Add Hide Parameter;
-    function f16()
-    {
-        // Push To UI & Save Position, Also Create Isolated Array For Mesh;
-        qk[qw+1]=k;qk[qw+2]=i4;h=cf.slice(k,i4);f22(qw,0);qf+=qz;
 
-        // Compute Normals And Add Mesh To Scene;
-        a=new THREE.BufferGeometry();a.setAttribute('position',new THREE.Float32BufferAttribute(h,3));a.setAttribute('normal',new THREE.Float32BufferAttribute(computeVertexN(h),3));qk[qw+3]=new THREE.Mesh(a,r2);qk[qw+3].ix=qw;lk+=1;scene.add(qk[qw+3]);r9=qk[qw+4]=1;qw+=5;
+    .bordertest {
+      height: 0.1rem;
     }
+  </style>
+</head>
+<body>
+  <input style="display: none;" type="file"/>
 
-    // Calculate Origin Point Of Mesh;
-    function f20(z,n,m)
-    {
-        o0=o1=o2=0;o3=(m-n)/3;while(n<m){o0+=z[n];o1+=z[n+1];o2+=z[n+2];n+=3}o0/=o3;o1/=o3;o2/=o3;
-    }
+  <!-- Icon References -->
+  <svg style="display: none;">
+    <path id="bx" d="M10.7429 5.09232C11.1494 5.03223 11.5686 5 12.0004 5C17.1054 5 20.4553 9.50484 21.5807 11.2868C21.7169 11.5025 21.785 11.6103 21.8231 11.7767C21.8518 11.9016 21.8517 12.0987 21.8231 12.2236C21.7849 12.3899 21.7164 12.4985 21.5792 12.7156C21.2793 13.1901 20.8222 13.8571 20.2165 14.5805M6.72432 6.71504C4.56225 8.1817 3.09445 10.2194 2.42111 11.2853C2.28428 11.5019 2.21587 11.6102 2.17774 11.7765C2.1491 11.9014 2.14909 12.0984 2.17771 12.2234C2.21583 12.3897 2.28393 12.4975 2.42013 12.7132C3.54554 14.4952 6.89541 19 12.0004 19C14.0588 19 15.8319 18.2676 17.2888 17.2766M3.00042 3L21.0004 21M9.8791 9.87868C9.3362 10.4216 9.00042 11.1716 9.00042 12C9.00042 13.6569 10.3436 15 12.0004 15C12.8288 15 13.5788 14.6642 14.1217 14.1213" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" stroke="currentColor"/>
+    <path id="bz" d="M2.42012 12.7132C2.28394 12.4975 2.21584 12.3897 2.17772 12.2234C2.14909 12.0985 2.14909 11.9015 2.17772 11.7766C2.21584 11.6103 2.28394 11.5025 2.42012 11.2868C3.54553 9.50484 6.8954 5 12.0004 5C17.1054 5 20.4553 9.50484 21.5807 11.2868C21.7169 11.5025 21.785 11.6103 21.8231 11.7766C21.8517 11.9015 21.8517 12.0985 21.8231 12.2234C21.785 12.3897 21.7169 12.4975 21.5807 12.7132C20.4553 14.4952 17.1054 19 12.0004 19C6.8954 19 3.54553 14.4952 2.42012 12.7132Z M12.0004 15C13.6573 15 15.0004 13.6569 15.0004 12C15.0004 10.3431 13.6573 9 12.0004 9C10.3435 9 9.0004 10.3431 9.0004 12C9.0004 13.6569 10.3435 15 12.0004 15Z" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" stroke="currentColor"/>
+    <path id="bm" d="M18 21Q17 21 16 20L1 5C0 4 0 2 1 1 2 0 4 0 5 1L17.9 13.6 31 1C32 0 34 0 35 1 36 2 36 4 35 5L20 20Q19 21 18 21Z" fill="currentColor" fill-rule="nonzero"></path>
+  </svg>
 
-    //lka=[0,0,0, 5,6,2, 6,2,3, 6,2,3];f20(lka,3,12);console.log(o0);console.log(o1);console.log(o2);
+  <div id="main">
+    <div id="header">
+      <img qn style="width: 2.5rem; margin-right: 0.75rem;"></img>
+      <div style="font-size: 1.8rem;">Tellurium</div>
 
-    // Deselect All Meshes;
-    function f18(){z=0;while(z<qt){qk[qm[z]+3].material=r2;f22(qm[z],0);z+=1}}
+      <div id="search">
+        <svg style="width: 0.83rem; margin: 0 0.4rem 0 0.2rem;" viewBox="0 0 20 19.5" stroke="currentColor" stroke-linejoin="round" stroke-width="2" fill="none">
+          <path d="M7 1A4 4 40 107 13 4 4 40 107 1M11.25 11.25 18.25 17.75Z"></path>
+        </svg>
+        <input type="text" placeholder="Search"></input>
+      </div>
 
-    // Universal Check For Mesh Selection;
-    function f17()
-    {
-        // Check If Already Selected;
-        i=0;while(i<qt&&qm[i]!=qe){i+=1}
+      <svg viewBox="0 0 24 24" fill="none">
+        <path d="M3.38589 5.66687C2.62955 4.82155 2.25138 4.39889 2.23712 4.03968C2.22473 3.72764 2.35882 3.42772 2.59963 3.22889C2.87684 3 3.44399 3 4.57828 3H19.4212C20.5555 3 21.1227 3 21.3999 3.22889C21.6407 3.42772 21.7748 3.72764 21.7624 4.03968C21.7481 4.39889 21.3699 4.82155 20.6136 5.66687L14.9074 12.0444C14.7566 12.2129 14.6812 12.2972 14.6275 12.3931C14.5798 12.4781 14.5448 12.5697 14.5236 12.6648C14.4997 12.7721 14.4997 12.8852 14.4997 13.1113V18.4584C14.4997 18.6539 14.4997 18.7517 14.4682 18.8363C14.4403 18.911 14.395 18.9779 14.336 19.0315C14.2692 19.0922 14.1784 19.1285 13.9969 19.2012L10.5969 20.5612C10.2293 20.7082 10.0455 20.7817 9.89802 20.751C9.76901 20.7242 9.6558 20.6476 9.583 20.5377C9.49975 20.4122 9.49975 20.2142 9.49975 19.8184V13.1113C9.49975 12.8852 9.49975 12.7721 9.47587 12.6648C9.45469 12.5697 9.41971 12.4781 9.37204 12.3931C9.31828 12.2972 9.2429 12.2129 9.09213 12.0444L3.38589 5.66687Z" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" stroke="currentColor"/>
+      </svg>
+      <svg style="margin-left: 0.9rem;" viewBox="0 0 24 24" fill="none">
+        <path d="M5 7.8C5 6.11984 5 5.27976 5.32698 4.63803C5.6146 4.07354 6.07354 3.6146 6.63803 3.32698C7.27976 3 8.11984 3 9.8 3H14.2C15.8802 3 16.7202 3 17.362 3.32698C17.9265 3.6146 18.3854 4.07354 18.673 4.63803C19 5.27976 19 6.11984 19 7.8V21L12 17L5 21V7.8Z" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" stroke="currentColor"/>
+      </svg>
+      <svg style="margin-left: 0.9rem;" viewBox="0 0 24 24" fill="none">
+        <path d="M12 15C13.6569 15 15 13.6569 15 12C15 10.3431 13.6569 9 12 9C10.3431 9 9 10.3431 9 12C9 13.6569 10.3431 15 12 15Z" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" stroke="#fff"></path>
+        <path d="M18.7273 14.7273C18.6063 15.0015 18.5702 15.3056 18.6236 15.6005C18.6771 15.8954 18.8177 16.1676 19.0273 16.3818L19.0818 16.4364C19.2509 16.6052 19.385 16.8057 19.4765 17.0265C19.568 17.2472 19.6151 17.4838 19.6151 17.7227C19.6151 17.9617 19.568 18.1983 19.4765 18.419C19.385 18.6397 19.2509 18.8402 19.0818 19.0091C18.913 19.1781 18.7124 19.3122 18.4917 19.4037C18.271 19.4952 18.0344 19.5423 17.7955 19.5423C17.5565 19.5423 17.3199 19.4952 17.0992 19.4037C16.8785 19.3122 16.678 19.1781 16.5091 19.0091L16.4545 18.9545C16.2403 18.745 15.9682 18.6044 15.6733 18.5509C15.3784 18.4974 15.0742 18.5335 14.8 18.6545C14.5311 18.7698 14.3018 18.9611 14.1403 19.205C13.9788 19.4489 13.8921 19.7347 13.8909 20.0273V20.1818C13.8909 20.664 13.6994 21.1265 13.3584 21.4675C13.0174 21.8084 12.5549 22 12.0727 22C11.5905 22 11.1281 21.8084 10.7871 21.4675C10.4461 21.1265 10.2545 20.664 10.2545 20.1818V20.1C10.2475 19.7991 10.1501 19.5073 9.97501 19.2625C9.79991 19.0176 9.55521 18.8312 9.27273 18.7273C8.99853 18.6063 8.69437 18.5702 8.39947 18.6236C8.10456 18.6771 7.83244 18.8177 7.61818 19.0273L7.56364 19.0818C7.39478 19.2509 7.19425 19.385 6.97353 19.4765C6.7528 19.568 6.51621 19.6151 6.27727 19.6151C6.03834 19.6151 5.80174 19.568 5.58102 19.4765C5.36029 19.385 5.15977 19.2509 4.99091 19.0818C4.82186 18.913 4.68775 18.7124 4.59626 18.4917C4.50476 18.271 4.45766 18.0344 4.45766 17.7955C4.45766 17.5565 4.50476 17.3199 4.59626 17.0992C4.68775 16.8785 4.82186 16.678 4.99091 16.5091L5.04545 16.4545C5.25503 16.2403 5.39562 15.9682 5.4491 15.6733C5.50257 15.3784 5.46647 15.0742 5.34545 14.8C5.23022 14.5311 5.03887 14.3018 4.79497 14.1403C4.55107 13.9788 4.26526 13.8921 3.97273 13.8909H3.81818C3.33597 13.8909 2.87351 13.6994 2.53253 13.3584C2.19156 13.0174 2 12.5549 2 12.0727C2 11.5905 2.19156 11.1281 2.53253 10.7871C2.87351 10.4461 3.33597 10.2545 3.81818 10.2545H3.9C4.2009 10.2475 4.49273 10.1501 4.73754 9.97501C4.98236 9.79991 5.16883 9.55521 5.27273 9.27273C5.39374 8.99853 5.42984 8.69437 5.37637 8.39947C5.3229 8.10456 5.18231 7.83244 4.97273 7.61818L4.91818 7.56364C4.74913 7.39478 4.61503 7.19425 4.52353 6.97353C4.43203 6.7528 4.38493 6.51621 4.38493 6.27727C4.38493 6.03834 4.43203 5.80174 4.52353 5.58102C4.61503 5.36029 4.74913 5.15977 4.91818 4.99091C5.08704 4.82186 5.28757 4.68775 5.50829 4.59626C5.72901 4.50476 5.96561 4.45766 6.20455 4.45766C6.44348 4.45766 6.68008 4.50476 6.9008 4.59626C7.12152 4.68775 7.32205 4.82186 7.49091 4.99091L7.54545 5.04545C7.75971 5.25503 8.03183 5.39562 8.32674 5.4491C8.62164 5.50257 8.9258 5.46647 9.2 5.34545H9.27273C9.54161 5.23022 9.77093 5.03887 9.93245 4.79497C10.094 4.55107 10.1807 4.26526 10.1818 3.97273V3.81818C10.1818 3.33597 10.3734 2.87351 10.7144 2.53253C11.0553 2.19156 11.5178 2 12 2C12.4822 2 12.9447 2.19156 13.2856 2.53253C13.6266 2.87351 13.8182 3.33597 13.8182 3.81818V3.9C13.8193 4.19253 13.906 4.47834 14.0676 4.72224C14.2291 4.96614 14.4584 5.15749 14.7273 5.27273C15.0015 5.39374 15.3056 5.42984 15.6005 5.37637C15.8954 5.3229 16.1676 5.18231 16.3818 4.97273L16.4364 4.91818C16.6052 4.74913 16.8057 4.61503 17.0265 4.52353C17.2472 4.43203 17.4838 4.38493 17.7227 4.38493C17.9617 4.38493 18.1983 4.43203 18.419 4.52353C18.6397 4.61503 18.8402 4.74913 19.0091 4.91818C19.1781 5.08704 19.3122 5.28757 19.4037 5.50829C19.4952 5.72901 19.5423 5.96561 19.5423 6.20455C19.5423 6.44348 19.4952 6.68008 19.4037 6.9008C19.3122 7.12152 19.1781 7.32205 19.0091 7.49091L18.9545 7.54545C18.745 7.75971 18.6044 8.03183 18.5509 8.32674C18.4974 8.62164 18.5335 8.9258 18.6545 9.2V9.27273C18.7698 9.54161 18.9611 9.77093 19.205 9.93245C19.4489 10.094 19.7347 10.1807 20.0273 10.1818H20.1818C20.664 10.1818 21.1265 10.3734 21.4675 10.7144C21.8084 11.0553 22 11.5178 22 12C22 12.4822 21.8084 12.9447 21.4675 13.2856C21.1265 13.6266 20.664 13.8182 20.1818 13.8182H20.1C19.8075 13.8193 19.5217 13.906 19.2778 14.0676C19.0339 14.2291 18.8425 14.4584 18.7273 14.7273Z" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" stroke="currentColor"></path>
+      </svg>
+    </div>
 
-        if(kx==2)
-        {
-            // Handle Single Selection;
-            f18();if(i==qt){qk[qe+3].material=r4;qm[0]=qe;qt=1;f22(qe,1)}else{qt=0}
-        }
-        else
-        {
-            // Handle Shift Selection;
-            if(i==qt){qk[qe+3].material=r4;qm[qt]=qe;qt+=1;f22(qe,1)}else{qk[qe+3].material=r2;qt-=1;f22(qe,0);while(i<qt){qm[i]=qm[i+1];i+=1}}
-        }
-    }
+    <div id="content">
+      <div id="sidebar">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.8rem;">
+          Scene Objects
+          
+          <svg onclick="g6.click()" id="add" viewBox="0 0 24 24" fill="none">
+            <path d="M12 5V19M5 12H19" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" stroke="currentColor"/>
+          </svg>
+        </div>
 
-    // Vector Images;
-    tuu=new Path2D("M11.5.5A.5.5 180 0111 1H1A.5.5 180 011 0H11A.5.5 180 0111.5.5M13.5 4.5A.5.5 180 0113 5H3A.5.5 180 013 4H13A.5.5 180 0113.5 4.5M15.5 8.5A.5.5 180 0115 9H5A.5.5 180 015 8H15A.5.5 180 0115.5 8.5");
-    tya=new Path2D("M8.235 1.559a.5.5 0 0 0-.47 0l-7.5 4a.5.5 0 0 0 0 .882L3.188 8 .264 9.559a.5.5 0 0 0 0 .882l7.5 4a.5.5 0 0 0 .47 0l7.5-4a.5.5 0 0 0 0-.882L12.813 8l2.922-1.559a.5.5 0 0 0 0-.882zm3.515 7.008L14.438 10 8 13.433 1.562 10 4.25 8.567l3.515 1.874a.5.5 0 0 0 .47 0zM8 9.433 1.562 6 8 2.567 14.438 6z");
-    tyh=new Path2D("M3.5 2A1.5 1.5 0 0 1 5 3.5V5H3.5a1.5 1.5 0 1 1 0-3M6 5V3.5A2.5 2.5 0 1 0 3.5 6H5v4H3.5A2.5 2.5 0 1 0 6 12.5V11h4v1.5a2.5 2.5 0 1 0 2.5-2.5H11V6h1.5A2.5 2.5 0 1 0 10 3.5V5zm4 1v4H6V6zm1-1V3.5A1.5 1.5 0 1 1 12.5 5zm0 6h1.5a1.5 1.5 0 1 1-1.5 1.5zm-6 0v1.5A1.5 1.5 0 1 1 3.5 11z");
+        <div onmousemove="drs(event)" id="elist">
+          <div class="bordertest"></div>
+        </div>
 
-    // Inline Input Functions;
-    function gpz(){gpr=g4.measureText(gpv[gpq]).width/2*gps;g4.fillText(gpv[gpq],gpw-gpr,gpa)}
-    function gpo(){gpz();g4.fillRect(gpw+g4.measureText(gpv[gpq].slice(0,gpp)).width-gpr,gpa-gc*13,gc*1,gc*14+2)}
-    function gpu(){gpz();if(gpp>gpj){tmp0=gpj;tmp1=gpp;}else{tmp0=gpp;tmp1=gpj}g4.fillRect(gpw+g4.measureText(gpv[gpq].slice(0,tmp0)).width-gpr,gpa+gc*5,g4.measureText(gpv[gpq].slice(tmp0,tmp1)).width,gc)}
-    function gph(){g4.font=gpg;g4.fillStyle="#000";g4.fillRect(gpw-gc*2-g4.measureText(gpv[gpq]).width/2*gps,gpa-gc*14,g4.measureText(gpv[gpq]).width+gc*6,gc*14+gc*6);g4.fillStyle="#fff"}
-    function gpk(){if(gpp>gpj){tmp=gpp;gpp=gpj;gpj=tmp}}function gpb(){gpk();navigator.clipboard.writeText(gpv[gpq].slice(gpp,gpj))}
+        <div>
+          <div style="display: flex; justify-content: space-between; align-items: center; border-top: 0.1rem solid var(--brdr-color); padding: 0.5rem 0.2rem 0.2rem;">
+            © Wolf Schulz
 
-    
-    // TextBox Setting Function;
-    function gsq(){gpg=gc*14+"px 'u'";gpp=gpj=gpv[gpq].length;gpx=1;gpl=f19;gps=1}
-    
-    function gp0(){gpw=gh1+gc*100;gpa=gh3+gc*41;gsq()}function gp1(){gpw=gh1+gc*200;gpa=gh3+gc*41;gsq()}function gp2(){gpw=gh1+gc*300;gpa=gh3+gc*41;gsq()}
-    function gp3(){gpw=gh1+gc*100;gpa=gh3+gc*80;gsq()}function gp4(){gpw=gh1+gc*200;gpa=gh3+gc*80;gsq()}function gp5(){gpw=gh1+gc*300;gpa=gh3+gc*80;gsq()}
+            <a href="https://github.com/92181/modeler" style="all: unset; display: flex;">
+              <svg id="add" viewBox="0 0 64 64" author="etn-ccis">
+                <path stroke-width="0" fill="currentColor" d="M32 0 C14 0 0 14 0 32 0 53 19 62 22 62 24 62 24 61 24 60 L24 55 C17 57 14 53 13 50 13 50 13 49 11 47 10 46 6 44 10 44 13 44 15 48 15 48 18 52 22 51 24 50 24 48 26 46 26 46 18 45 12 42 12 31 12 27 13 24 15 22 15 22 13 18 15 13 15 13 20 13 24 17 27 15 37 15 40 17 44 13 49 13 49 13 51 20 49 22 49 22 51 24 52 27 52 31 52 42 45 45 38 46 39 47 40 49 40 52 L40 60 C40 61 40 62 42 62 45 62 64 53 64 32 64 14 50 0 32 0 Z"/>
+              </svg>
+            </a>
+          </div>
+          
+        </div>
+      </div>
 
-    function gp6(){gpw=gh1+gc*200;gpa=gh3+gc*41;gpg=gc*14+"px 'u'";gpp=gpj=gpv[gpq].length;gpx=1;gpl=function(){qk[qm[0]]=gpv[gpq];f22(qm[0],1)};gps=1}
+      <canvas tabIndex="0"></canvas>
 
-    // Text Input Array Of Strings, Active Index;
-    gpv=["0.00","0.00","0.00","0.00","0.00","0.00","1.00","1.00","1.00","0.00","0.00","0.00","0.00","0.00","0.00",""];gpq=-1;
+      <div id="cntx">
+        <div>
+          <div></div>
+          <svg viewBox="0 0 24 24" fill="none" style="width: 22px; margin-left: auto; cursor: pointer;">
+            <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <div id="cnts" style="display: flex; flex-direction: column; gap: 0.5rem; font-size: 0.9rem;">
+          <div>
+            <div class="cnt" style="min-width: 45px; margin-right: 0.5rem;"></div>
+            <input type="text" onfocus="inp(this)">
+            <input type="text" onfocus="inp(this)">
+            <input type="text" onfocus="inp(this)">
+          </div>
 
-    // Draw UI For Rotation & Scaling;
-    function f21(i,z)
-    {
-        g4.beginPath();g4.strokeStyle="#404040";g4.fillStyle="#000";g4.lineWidth=gc;
-        gh1=RotMovSclMenuLeft+gc*23;gh3=gh2+gc*40;gh4=gh2+gc*66;gh5=RotMovSclMenuLeft+gc*85;gh6=gh3+gc*64;gh7=gc*6;gh8=gh5+gc*100;gh9=gh5+gc*200;ghx=gc*80;
+          <div class="slct">
+            <div class="cnt" style="min-width: 45px; margin-right: 0.5rem;">Axis</div>
 
-        g4.roundRect(RotMovSclMenuLeft,gh2,RotMovSclMenuWidth,gc*220,gc*17);g4.fill();g4.stroke();
+            <select class="bn">
+              <option>X</option>
+              <option>Y</option>
+              <option>Z</option>
+            </select>
 
-        g4.font=gc*17+"px 'u'";g4.fillStyle="#fff";g4.fillText(i,gh1+gc*30,gh3);g4.font=gc*14+"px 'u'";g4.fillText(z,gh1,gh3+gc*40);g4.fillText("Axis",gh1,gh3+gc*80);
+            <div style="position: absolute; right: 0.8rem; display: flex; pointer-events: none;">
+              <svg viewBox="0.25 0.25 35.5 20.75" style="width: 0.8rem; overflow: visible;"><use xlink:href="#bm"></svg>
+            </div>
 
-        // Fill Text Boxes With Corresponding Values;
-        gp0();gpz();gpq+=1;gp1();gpz();gpq+=1;gp2();gpz();gpq+=1;gp3();gpz();gpq+=1;gp4();gpz();gpq+=1;gp5();gpz();gpq=-1;
+          </div>
 
-        j=gc;
-        g4.beginPath();g4.roundRect(gh5,gh4,j*80,gc*22,gh7);g4.roundRect(gh5+j*100,gh4,j*80,j*22,gh7);g4.roundRect(gh5+j*200,gh4,j*80,j*22,gh7);g4.roundRect(gh5,gh6,j*80,j*22,gh7);g4.roundRect(gh5+j*100,gh6,j*80,j*22,gh7);g4.roundRect(gh5+j*200,gh6,j*80,j*22,gh7);g4.stroke();
-
-        g4.fillText("Escape",gh1+j*22,gh2+j*200);g4.fillText("Enter",gh1+j*306,gh2+j*200);
-        g4.translate(gh1,gh2+j*188);g4.scale(j*0.9,j*0.9);g4.fill(tyh);g4.setTransform(1,0,0,1,0,0);g4.translate(gh1+j*283,gh2+j*188);g4.scale(j*0.9,j*0.9);g4.fill(tyh);g4.setTransform(1,0,0,1,0,0);
-
-        g4.translate(gh1,gh3-j*15);g4.scale(j*1.2,j*1.2);g4.fill(new Path2D("M7.646.146a.5.5 0 0 1 .708 0l2 2a.5.5 0 0 1-.708.708L8.5 1.707V5.5a.5.5 0 0 1-1 0V1.707L6.354 2.854a.5.5 0 1 1-.708-.708zM8 10a.5.5 0 0 1 .5.5v3.793l1.146-1.147a.5.5 0 0 1 .708.708l-2 2a.5.5 0 0 1-.708 0l-2-2a.5.5 0 0 1 .708-.708L7.5 14.293V10.5A.5.5 0 0 1 8 10M.146 8.354a.5.5 0 0 1 0-.708l2-2a.5.5 0 1 1 .708.708L1.707 7.5H5.5a.5.5 0 0 1 0 1H1.707l1.147 1.146a.5.5 0 0 1-.708.708zM10 8a.5.5 0 0 1 .5-.5h3.793l-1.147-1.146a.5.5 0 0 1 .708-.708l2 2a.5.5 0 0 1 0 .708l-2 2a.5.5 0 0 1-.708-.708L14.293 8.5H10.5A.5.5 0 0 1 10 8"));g4.setTransform(1,0,0,1,0,0);
-    }
-
-    // Clear And Apply For Rotation & Scaling;
-    function f24()
-    {
-        g4.clearRect(RotMovSclMenuLeft-gc*2,gh2-gc*2,RotMovSclMenuWidth+gc*4,gc*224);
-
-        i=0;while(i<qt)
-        {
-            z=qm[i];e=qk[z+1];j=qk[z+2];
+          <div class="slct">
+            <div class="cnt" style="min-width: 45px; margin-right: 0.5rem;">Origin</div>
             
-            if(k6==1)
-            {
-                rotateVertices(cf,e,j,parseFloat(gpv[0]),parseFloat(gpv[1]),parseFloat(gpv[2]));gpv[0]=gpv[1]=gpv[2]=0; // this is incorrect reset at absolute end!
-            }
-            else if(k6==2)
-            {
-                scaleMesh(cf,e,j,parseFloat(gpv[6]),parseFloat(gpv[7]),parseFloat(gpv[8]));gpv[6]=gpv[7]=gpv[8]=1;
-            }
-            else if(k6==3)
-            {
-                MoveXYZ(cf,e,j,parseFloat(gpv[12]),parseFloat(gpv[13]),parseFloat(gpv[14]));gpv[12]=gpv[13]=gpv[14]=0;
-            }
-
-            i+=1;
-        }
-
-        k6=0;
-    }
-
-    // Clear And Escape For Event;
-    function f37()
-    {
-        g4.clearRect(RotMovSclMenuLeft-gc*2,gh2-gc*2,RotMovSclMenuWidth+gc*4,gc*224);
-        if(k6==1){gpv[0]=gpv[1]=gpv[2]="0.00"}else if(k6==2){gpv[6]=gpv[7]=gpv[8]="1.00"}else if(k6==3){gpv[12]=gpv[13]=gpv[14]="0.00"}
-
-        i=0;while(i<qt)
-        {
-            z=qm[i];e=qk[z+1];j=qk[z+2];v=qk[z+3].geometry;h=cf.slice(e,j);
-            v.setAttribute('position',new THREE.Float32BufferAttribute(h,3));v.setAttribute('normal',new THREE.Float32BufferAttribute(computeVertexN(h),3));i+=1;
-        }
-
-        r9=1;
-    }
-
-    // Draw UI For Movement;
-    function f23()
-    {
-        j=gc;gha=g3.height-gc*222;
-
-        g4.beginPath();g4.strokeStyle="#404040";g4.fillStyle="#000";g4.lineWidth=gc;
-        gh1=RotMovSclMenuLeft+gc*23;gh3=gha+gc*40;gh4=gha+gc*66;gh5=RotMovSclMenuLeft+gc*85;gh6=gh3+gc*64;gh7=gc*6;gh8=gh5+gc*100;gh9=gh5+gc*200;ghx=gc*80;
-
-        g4.roundRect(RotMovSclMenuLeft,gha,RotMovSclMenuWidth,gc*182,gc*17);g4.fill();g4.stroke();
-
-        g4.font=j*17+"px 'u'";g4.fillStyle="#fff";g4.fillText("Movement",gh1+j*30,gh3);g4.font=j*14+"px 'u'";g4.fillText("Move",gh1,gh3+j*40);
-
-        // Fill Text Boxes With Corresponding Values;
-        gpq=12;gp0();gpz();gpq+=1;gp1();gpz();gpq+=1;gp2();gpz();gpq=-1;
-
-        g4.beginPath();g4.roundRect(gh5,gh4,j*80,gc*22,gh7);g4.roundRect(gh5+j*100,gh4,j*80,j*22,gh7);g4.roundRect(gh5+j*200,gh4,j*80,j*22,gh7);g4.stroke();
-
-        g4.fillText("Escape",gh1+j*22,gha+j*162);g4.fillText("Enter",gh1+j*306,gha+j*162);
-        g4.translate(gh1,gha+j*150);g4.scale(j*0.9,j*0.9);g4.fill(tyh);g4.setTransform(1,0,0,1,0,0);g4.translate(gh1+j*283,gha+j*150);g4.scale(j*0.9,j*0.9);g4.fill(tyh);g4.setTransform(1,0,0,1,0,0);
-
-        g4.translate(gh1,gh3-j*15);g4.scale(j*1.2,j*1.2);g4.fill(new Path2D("M7.646.146a.5.5 0 0 1 .708 0l2 2a.5.5 0 0 1-.708.708L8.5 1.707V5.5a.5.5 0 0 1-1 0V1.707L6.354 2.854a.5.5 0 1 1-.708-.708zM8 10a.5.5 0 0 1 .5.5v3.793l1.146-1.147a.5.5 0 0 1 .708.708l-2 2a.5.5 0 0 1-.708 0l-2-2a.5.5 0 0 1 .708-.708L7.5 14.293V10.5A.5.5 0 0 1 8 10M.146 8.354a.5.5 0 0 1 0-.708l2-2a.5.5 0 1 1 .708.708L1.707 7.5H5.5a.5.5 0 0 1 0 1H1.707l1.147 1.146a.5.5 0 0 1-.708.708zM10 8a.5.5 0 0 1 .5-.5h3.793l-1.147-1.146a.5.5 0 0 1 .708-.708l2 2a.5.5 0 0 1 0 .708l-2 2a.5.5 0 0 1-.708-.708L14.293 8.5H10.5A.5.5 0 0 1 10 8"));g4.setTransform(1,0,0,1,0,0);
-    }
-
-    // Rotate, Transform & Scale A Mesh;
-    function f19()
-    {
-        i=0;while(i<qt)
-        {
-            z=qm[i];e=qk[z+1];j=qk[z+2];v=qk[z+3].geometry;h=cf.slice(e,j);
-            
-            if(k6==1)
-            {
-                rotateVertices(h,0,h.length,parseFloat(gpv[0]),parseFloat(gpv[1]),parseFloat(gpv[2]));
-            }
-            else if(k6==2)
-            {
-                scaleMesh(h,0,h.length,parseFloat(gpv[6]),parseFloat(gpv[7]),parseFloat(gpv[8]));
-            }
-            else if(k6==3)
-            {
-                MoveXYZ(h,0,h.length,parseFloat(gpv[12]),parseFloat(gpv[13]),parseFloat(gpv[14]));
-            }
-
-            v.setAttribute('position',new THREE.Float32BufferAttribute(h,3));v.setAttribute('normal',new THREE.Float32BufferAttribute(computeVertexN(h),3));i+=1;
-        }
-
-        r9=1;
-    }
-
-    // Shift Qk Array Position For Mesh Entry;
-    function f28(d,u)
-    {
-        while(d<qw){qk[d+1]-=u;qk[d+2]-=u;d+=5}
-    }
-
-    gs0=[];gs1=0; // Hide Array;
-
-    // Hide Single Or Multiple Meshes;
-    function f35()
-    {
-        z=qm[0];let e=g=qk[z+1],j=qk[z+2];qk[z+3].visible=false;qk[z+4]=0;r9=1;
-
-        // Write To Hiden Array And Shift Back Cf (Remove Empty Space);
-        f28(d,j-e);qk[z+1]=gs1;while(e<j){gs0[gs1]=cf[e];e+=1;gs1+=1}while(j<i4){cf[g]=cf[j];j+=1;g+=1}i4=g;qk[z+2]=gs1;
-
-        // Handle UI;
-        if(k6==4){f30()}
-    }
-
-    function f36()
-    {
-        z=qm[0];let m=qk[z+3],e=g=qk[z+1],j=qk[z+2];m.visible=true;qk[z+4]=1;r9=1;
-
-        // Write Hidden Mesh Back To Cf;
-        qk[z+1]=i4;while(e<j){cf[i4]=gs0[e];e+=1;i4+=1}qk[z+2]=i4;
-
-        // Handle UI;
-        if(k6==4){f30()}
-    }
-
-    // Remove A Single Mesh Or Multiple Meshes;
-    function f26()
-    {
-        let i=0;while(i<qt)
-        {
-            z=a=qm[i],d=z+5;let m=qk[z+3],e=g=qk[z+1],j=qk[z+2];
-
-            // Handle UI And Remove From Scene;
-            scene.remove(m);m.geometry.dispose();g4.clearRect(gc*18,(qi+qz*((qw-10)/5))-gc*21,gc*257,gc*32);
-
-            // Shift Back Cf And Qk (Remove Empty Space);
-            f28(d,j-e);while(z<qw){qk[z]=qk[d];qk[z+1]=qk[d+1];qk[z+2]=qk[d+2];qk[z+3]=qk[d+3];qk[z+4]=qk[d+4];z+=5;d+=5}
-            while(j<i4){cf[g]=cf[j];j+=1;g+=1}i4=g;qw-=5;qt-=1;qm.shift();while(a<qw){f22(a,0);a+=5}
-
-            i+=1;
-        }
-
-        r9=1;
-    }
-
-    // Join The Selected Meshes To Form A Single Mesh;
-    function f27()
-    {
-        console.log('Join!');
-    }
-
-    // Handle Hide Or Show Mesh Button;
-    function f30()
-    {
-        g4.font=gc*14+"px 'u'";g4.strokeStyle="#404040";g4.lineWidth=gc;
-
-        g4.fillStyle="#000"; g4.fillRect(gh5,gh6-gc*2,gc*280,gc*30);g4.fillStyle="#fff";
-
-        if(qk[qm[0]+4])
-        {
-            g4.beginPath();g4.fillText("Hide",gh5+gc*48,gh2+gc*120);g4.roundRect(gh5,gh6,gc*130,gc*22,gh7);g4.stroke();
-            g4.beginPath();g4.fillStyle="#fff";g4.roundRect(gh5+gc*150,gh6,gc*130,gc*22,gh7);g4.fill();
-            g4.fillStyle="#000";g4.fillText("Render",gh5+gc*190,gh2+gc*120);
-        }
-        else
-        {
-            g4.beginPath();g4.fillText("Render",gh5+gc*190,gh2+gc*120);g4.roundRect(gh5+gc*150,gh6,gc*130,gc*22,gh7);g4.stroke();
-            g4.beginPath();g4.fillStyle="#fff";g4.roundRect(gh5,gh6,gc*130,gc*22,gh7);g4.fill();
-            g4.fillStyle="#000";g4.fillText("Hide",gh5+gc*48,gh2+gc*120);
-        }
-
-        g4.fillStyle="#fff";
-    }
-
-    function f29()
-    {
-        g4.beginPath();g4.strokeStyle="#404040";g4.fillStyle="#000";g4.lineWidth=gc;
-        gh1=RotMovSclMenuLeft+gc*23;gh3=gh2+gc*40;gh4=gh2+gc*66;gh5=RotMovSclMenuLeft+gc*85;gh6=gh3+gc*64;gh7=gc*6;gh8=gh5+gc*100;gh9=gh5+gc*200;ghx=gc*80;
-
-        g4.roundRect(RotMovSclMenuLeft,gh2,RotMovSclMenuWidth,gc*220,gc*17);g4.fill();g4.stroke();
-
-        g4.beginPath();g4.roundRect(gh5,gh4,gc*280,gc*22,gh7);g4.stroke();
-
-        g4.font=gc*17+"px 'u'";g4.fillStyle="#fff";g4.fillText("Mesh Settings",gh1+gc*30,gh3);g4.font=gc*14+"px 'u'";g4.fillText("Name",gh1,gh3+gc*40);g4.fillText("Show",gh1,gh3+gc*80);
-
-        gpq=15;gpv[gpq]=qk[qm[0]];gp6();gpz();gpq=-1;f30();
-
-        j=gc;g4.fillText("Escape",gh1+j*22,gh2+j*200);g4.fillText("Enter",gh1+j*306,gh2+j*200);
-        g4.translate(gh1,gh2+j*188);g4.scale(j*0.9,j*0.9);g4.fill(tyh);g4.setTransform(1,0,0,1,0,0);g4.translate(gh1+j*283,gh2+j*188);g4.scale(j*0.9,j*0.9);g4.fill(tyh);g4.setTransform(1,0,0,1,0,0);
-
-        g4.translate(gh1,gh3-j*15);g4.scale(j*1.2,j*1.2);g4.fill(new Path2D("M7.646.146a.5.5 0 0 1 .708 0l2 2a.5.5 0 0 1-.708.708L8.5 1.707V5.5a.5.5 0 0 1-1 0V1.707L6.354 2.854a.5.5 0 1 1-.708-.708zM8 10a.5.5 0 0 1 .5.5v3.793l1.146-1.147a.5.5 0 0 1 .708.708l-2 2a.5.5 0 0 1-.708 0l-2-2a.5.5 0 0 1 .708-.708L7.5 14.293V10.5A.5.5 0 0 1 8 10M.146 8.354a.5.5 0 0 1 0-.708l2-2a.5.5 0 1 1 .708.708L1.707 7.5H5.5a.5.5 0 0 1 0 1H1.707l1.147 1.146a.5.5 0 0 1-.708.708zM10 8a.5.5 0 0 1 .5-.5h3.793l-1.147-1.146a.5.5 0 0 1 .708-.708l2 2a.5.5 0 0 1 0 .708l-2 2a.5.5 0 0 1-.708-.708L14.293 8.5H10.5A.5.5 0 0 1 10 8"));g4.setTransform(1,0,0,1,0,0);
-    }
-
-    (async function()
-    {
-        // General Variables, (Nurbs Quality: cn, Vertices: cv, Size Of Nurbs Surface: cm, Size In Pages For Allocation: cs, Mesh Info: qk);
-        cv=[];cf=[];i4=0;p2=2*Math.PI;s6=0;s7=4*4*4;cn=100;cm=cn*cn*18;cs=parseInt(cm*10/16384);qk=[];qw=0;qm=[];lk=1;qt=0;qf=qi=gc*185;qz=gc*45;k6=0;
-        
-        //qy=gc*270;
-        qy=gc*300;
-    
-        // sizing!!! something goes wrong here!
-        // because retina left is gc*90/rh
-
-        CornerRadiusGL=gc*30;RotMovSclMenuLeft=gc*325;RotMovSclMenuWidth=gc*400;RotMovSclMenuRight=RotMovSclMenuLeft+RotMovSclMenuWidth;
-
-        CanvasGL.style.left=qy/r3+"px";
-
-        // Load Font;
-        const font_name = new FontFace('u','url("static/u.woff2")');document.fonts.add(font_name);await font_name.load();
-
-        // Import STL File To Mesh Function;
-        g6.addEventListener('change',(e)=>
-        {
-            file=e.target.files[0];qk[qw]=file.name;reader=new FileReader();
-
-            reader.onload=function(event)
-            {
-                f13(event.target.result);
-            };
-
-            reader.readAsArrayBuffer(file);
-        });
-
-        // Create Camera & Scene, Add Fog & Background Color;
-        camera=new THREE.PerspectiveCamera(75,0,1,10000);camera.position.y=200;camera.position.z=200;camera.rotation.x=-0.5;scene=new THREE.Scene();
-
-        // Create Renderer;
-        r0=new THREE.WebGLRenderer({alpha:true,antialias:true,canvas:CanvasGL});r0.setClearColor(r1,0);r0.setPixelRatio(r3);
-        function f2(){dw=window.innerWidth;dh=window.innerHeight;g3.width=dw*r3;g3.height=dh*r3;g3.style.width=dw+"px";g3.style.height=dh+"px";dl=g3.width-150;dm=g3.height-150;camera.aspect=(dw-qy/r3)/dh;camera.updateProjectionMatrix();r0.setSize(dw-qy/r3,dh);r9=1}
-        f2();
-        
-        f12();f31();f32();f34();
-        
-        
-        //window.onresize=f2; // test
-
-        gh2=g3.height-gc*260;
-
-        let k0=k1=k2=k3=k4=k5=ku=r9=0;kx=2;ax=0;
-
-        // Draw UI To Canvas;
-        function f12()
-        {
-            i=g3.height;
-            
-            g4.fillStyle="#404040";g4.fillRect(qy,0,gc*1,g3.height);
-            
-            g4.fillStyle="#fff";g4.translate(gc*20,gc*15);g4.scale(gc*0.8,gc*0.8);g4.fill(new Path2D("M23 55Q27 63 36 68 33 61 35 58C37 64 41 63 43 68 46 63 38 56 41 50 44 44 68 49 68 39 68 35 52 34 49 24Q39 16 44 4 41 5 39 7 39 4 37 0 30 7 25 17 13 16 7 21 13 20 16 21 3 25 0 37 5 32 9 31 3 43 9 55 9 46 12 42 13 54 27 67 22 58 23 55M37 18Q33 17 30 18 32 11 36 7 37 11 37 18M40 25Q46 27 48 31 41 30 40 25"));g4.setTransform(1,0,0,1,0,0);
-
-            g4.fillStyle="#fff";g4.translate(gc*238,gc*32);g4.scale(gc*2.3,gc*2.3);g4.fill(new Path2D(tuu));g4.setTransform(1,0,0,1,0,0);g4.font=gc*30+`px 'u'`;g4.fillText("Tellurium",gc*90,gc*52);
-        }
-
-        // Manage UI Function;
-        function f33()
-        {
-            g4.beginPath();g4.font=gc*16+`px 'u'`;g4.lineWidth=gc;g4.clearRect(gc*18,z-gc*21,gc*229,gc*32);g4.roundRect(gc*20,z-gc*19,gc*255,gc*28,gc*6);
-            if(0){g4.fillStyle=g4.strokeStyle="#fff";g4.fill();g4.fillStyle="#000"}else{g4.fillStyle="#fff";g4.strokeStyle="#404040";g4.stroke()}
-            g4.translate(gc*237,z-gc*10);g4.scale(gc*1.1,gc*1.1);g4.fill(tuu);g4.setTransform(1,0,0,1,0,0);
-        }
-
-        // Draw Bottom UI Buttons (File, Utilities, Help);
-        function f31()
-        {
-            z=g3.height-gc*120;f33();g4.translate(gc*30,z-gc*13);g4.scale(gc*1.0,gc*1.0);g4.fill(new Path2D("M14 4.5V14a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V2a2 2 0 0 1 2-2h5.5zm-3 0A1.5 1.5 0 0 1 9.5 3V1H4a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V4.5z"));g4.setTransform(1,0,0,1,0,0);g4.fillText("File",gc*56,z);
-        }
-
-        function f32()
-        {
-            z=g3.height-gc*75;f33();g4.translate(gc*30,z-gc*13);g4.scale(gc*1.0,gc*1.0);g4.fill(new Path2D("M7.752.066a.5.5 0 0 1 .496 0l3.75 2.143a.5.5 0 0 1 .252.434v3.995l3.498 2A.5.5 0 0 1 16 9.07v4.286a.5.5 0 0 1-.252.434l-3.75 2.143a.5.5 0 0 1-.496 0l-3.502-2-3.502 2.001a.5.5 0 0 1-.496 0l-3.75-2.143A.5.5 0 0 1 0 13.357V9.071a.5.5 0 0 1 .252-.434L3.75 6.638V2.643a.5.5 0 0 1 .252-.434zM4.25 7.504 1.508 9.071l2.742 1.567 2.742-1.567zM7.5 9.933l-2.75 1.571v3.134l2.75-1.571zm1 3.134 2.75 1.571v-3.134L8.5 9.933zm.508-3.996 2.742 1.567 2.742-1.567-2.742-1.567zm2.242-2.433V3.504L8.5 5.076V8.21zM7.5 8.21V5.076L4.75 3.504v3.134zM5.258 2.643 8 4.21l2.742-1.567L8 1.076zM15 9.933l-2.75 1.571v3.134L15 13.067zM3.75 14.638v-3.134L1 9.933v3.134z"));g4.setTransform(1,0,0,1,0,0);g4.fillText("Utilities",gc*56,z);
-        }
-
-        function f34()
-        {
-            z=g3.height-gc*30;f33();g4.translate(gc*30,z-gc*13);g4.scale(gc*1.0,gc*1.0);g4.fill(new Path2D("m8.93 6.588-2.29.287-.082.38.45.083c.294.07.352.176.288.469l-.738 3.468c-.194.897.105 1.319.808 1.319.545 0 1.178-.252 1.465-.598l.088-.416c-.2.176-.492.246-.686.246-.275 0-.375-.193-.304-.533zM9 4.5a1 1 0 1 1-2 0 1 1 0 0 1 2 0 M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"));g4.setTransform(1,0,0,1,0,0);g4.fillText("Help",gc*56,z);
-        }
-        
-        // Declare Custom Mesh Shaders (Normal, Selected);
-        r5="varying vec3 vNormal;varying vec3 vPosition;void main(){vNormal=normal;vPosition=position;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);}";
-        r2=new THREE.ShaderMaterial({vertexShader:r5,fragmentShader:"varying vec3 vNormal;varying vec3 vPosition;vec3 normal;void main(){if(gl_FrontFacing){normal=vNormal;}else{normal=-vNormal;}gl_FragColor=vec4(vec3(dot(normal,normalize(cameraPosition-vPosition))),1.0);}",side:THREE.DoubleSide});
-        r4=new THREE.ShaderMaterial({vertexShader:r5,fragmentShader:`varying vec3 vNormal;varying vec3 vPosition;vec3 normal;void main(){if(gl_FrontFacing){normal=vNormal;}else{normal=-vNormal;}gl_FragColor=vec4(vec3(0.9,dot(normal,normalize(cameraPosition-vPosition)),0.9),1.0);}`,side:THREE.DoubleSide});
-        
-        // Generate Grid For Scene & Add Raycaster;
-        grid=InfiniteGridHelper("2000.0","20.0","0.6,0.6,0.6",(gc*1.3).toFixed(1));scene.add(grid);
-        grid1=InfiniteGridHelper("2000.0","80.0","0.7,0.7,0.7",(gc*1.6).toFixed(1));scene.add(grid1);
-        line0=LineHelper("2000.0",(gc*2).toFixed(1));scene.add(line0);
-
-        // Listen To KeyDown Event;
-        window.onkeydown=async function(e)
-        {
-            if(gpq>=0)
-            {
-               if(e.metaKey)
-               {
-                  switch(e.key)
-                  {
-                    case"a":{gpx=0;gpp=0;gpj=gpv[gpq].length;gph();gpu();break}
-                    case"c":{if(!gpx){gpb()}break}
-                    case"x":{if(!gpx){gpx=1;gph();gpb();gpv[gpq]=gpv[gpq].slice(0,gpp)+gpv[gpq].slice(gpj,gpv[gpq].length);gpo();gpl()}break}
-                    case"v":{if(!gpx){gpk();gpv[gpq]=gpv[gpq].slice(0,gpp)+await navigator.clipboard.readText()+gpv[gpq].slice(gpj,gpv[gpq].length);gph();gpo()}else{gpv[gpq]=gpv[gpq].slice(0,gpp)+await navigator.clipboard.readText()+gpv[gpq].slice(gpp);gph();gpo()}gpl();break}
-                  }
-               }
-               else if(e.key.length<2)
-               {
-                  if(!gpx){gpx=1;gph();gpk();gpv[gpq]=gpv[gpq].slice(0,gpp)+e.key+gpv[gpq].slice(gpj,gpv[gpq].length);gpp+=1;gpo()}else{gpv[gpq]=gpv[gpq].slice(0,gpp)+e.key+gpv[gpq].slice(gpp);gpp+=1;gph();gpo()}gpl()
-               }
-               else
-               {
-                  switch(e.key)
-                  {
-                    case"Escape":{gph();gpz();gpq=-1;e.preventDefault();break}
-                    case"Backspace":{if(!gpx){gpx=1;gph();gpk();gpv[gpq]=gpv[gpq].slice(0,gpp)+gpv[gpq].slice(gpj,gpv[gpq].length);gpo()}else if(gpp>0){gph();gpp-=1;gpv[gpq]=gpv[gpq].slice(0,gpp)+gpv[gpq].slice(gpp+1);gpo()}gpl();break}
-                    case"ArrowLeft":{if(e.shiftKey){if(gpx){gpj=gpp;gpx=0}if(gpj>0){gpj-=1;gph();gpu()}}else if(gpp>0){gpp-=1;gpx=1;gph();gpo()}break}
-                    case"ArrowRight":{if(e.shiftKey){if(gpx){gpj=gpp;gpx=0}if(gpj<gpv[gpq].length){gpj+=1;gph();gpu()}}else if(gpp<gpv[gpq].length){gpp+=1;gpx=1;gph();gpo()}break}
-                  }
-               }
-            }
-            else if(!e.metaKey)
-            {
-                if(k6>0) // clear certain inputs, hide window.
-                {
-                    if(e.code=="Escape"){f37();e.preventDefault()}else if(e.code=="Enter"){f24()}
-                }
-
-                switch(e.code)
-                {
-                    case"KeyR":{k6=1;gpq=0;f21("Rotation","Angle");break}
-                    case"KeyT":{k6=2;gpq=6;f21("Resizing","Scale");break}
-                    case"KeyH":{z=qm[0];if(qk[z+4]){f35()}else{f36()}break}
-                    case"KeyP":{g6.click();break}
-                    case"KeyX":{f26();break} // fix!
-                    case"KeyY":{if(qt>0){k6=4;f29()}break}
-                    case"KeyZ":{if(gx>0){ax=3}break}
-                    case"KeyG":{k6=3;f23();if(ku){ku=0}else{ku=1}break}
-                    case"ShiftLeft":{kx=4;break}
-                    case"KeyW":{k0=1;r9=1;break}
-                    case"KeyS":{k1=1;r9=1;break}
-                    case"KeyA":{k2=1;r9=1;break}
-                    case"KeyD":{k3=1;r9=1;break}
-                    case"KeyQ":{k4=1;r9=1;break}
-                    case"KeyE":{k5=1;r9=1;break}
-                }
-            }
-        }
-
-        window.onkeyup=function(k){switch(k.code){case"ShiftLeft":{kx=2;break}case"KeyW":{k0=0;break}case"KeyS":{k1=0;break}case"KeyA":{k2=0;break}case"KeyD":{k3=0;break}case"KeyQ":{k4=0;break}case"KeyE":{k5=0;break}}};
-
-        // Mouse Rotation;
-        g9=[];gx=0;
-
-        window.onmousedown=function(e)
-        {
-            let y=e.clientY*r3,x=e.clientX*r3;
-
-            // Buttons (File, Utilities, Help)
-            if(x<qy)
-            {
-                if(y>g3.height-gc*139&&y<g3.height-gc*107){g6.click()}
-                else if(y>g3.height-gc*94&&y<g3.height-gc*62){console.log("Util")}
-                else if(y>g3.height-gc*49&&y<g3.height-gc*18){console.log("Help")}
-            }
-
-            // Object Selector;
-            if(x<qy&&y>gc*105)
-            {
-                qe=parseInt((y-gc*105)/qz)*5;if(qe<qw){f17();if(x>qy-gc*70){f29()}}
-            }
-
-            // Catch Click On Control Points If Not Busy;
-            if(e.buttons<2)
-            {
-                // Handle Input On Active Rotation, Scale Or Movement Menu;
-                if(k6&&y>gh2&&x>RotMovSclMenuLeft&&x<RotMovSclMenuRight)
-                {
-                    // Check For Enter And Escape;
-                    if(y>gh4+gc*120&&y<gh4+gc*145)
-                    {
-                        if(x>gh1+gc*22&&x<gh1+gc*78){f37()}else if(x>gh1+gc*306&&x<gh1+gc*355){f24()}
-                    }
-
-                    if(gpq>=0){gph();gpz();gpq=-1}
-
-                    if(k6==4)
-                    {
-                        if(y>gh4&&y<gh4+gc*22&&x>gh5&&x<gh9+ghx){gpq=15;gp6();gph();gpo()}
-
-                        if(y>gh6&&y<gh6+gc*22)
-                        {
-                            z=qm[0];if(x>gh5&&x<gh5+gc*130){if(qk[z+4]){f35()}}else if(x>gh5+gc*150&&x<gh5+gc*280){if(!qk[z+4]){f36()}}
-                        } 
-                    }
-                    else
-                    {
-                        // Check XY Axis;
-                        if(k6==2){gpq+=6}else if(k6==3){gpq+=12}
-
-                        // Check Location And Execute;
-                        if(y>gh4&&y<gh4+gc*22)
-                        {
-                            if(x>gh5&&x<gh5+ghx){gpq+=1;gp0();gph();gpo()}else if(x>gh8&&x<gh8+ghx){gpq+=2;gp1();gph();gpo()}else if(x>gh9&&x<gh9+ghx){gpq+=3;gp2();gph();gpo()}
-                        }
-                        else if(y>gh6&&y<gh6+gc*22&&k6<3)
-                        {
-                            if(x>gh5&&x<gh5+ghx){gpq+=4;gp3();gph();gpo()}else if(x>gh8&&x<gh8+ghx){gpq+=5;gp4();gph();gpo()}else if(x>gh9&&x<gh9+ghx){gpq+=6;gp5();gph();gpo()}
-                        }
-
-                        // Check If There Was A Hit;
-                        if((k6==2&&gpq==5)||(k6==3&&gpq==11)){gpq=-1}
-                    }
-                }
-                else if(x>qy)
-                {
-                    const raycaster = new THREE.Raycaster();const pointer = new THREE.Vector2();
-                
-                    pointer.x = ( x / (dw*r3+qy) ) * 2 - 1;
-                    pointer.y = - ( y / (dh*r3) ) * 2 + 1;
-
-                    // update the picking ray with the camera and pointer position
-                    raycaster.setFromCamera( pointer, camera );
-
-                    // calculate objects intersecting the picking ray
-                    const intersects = raycaster.intersectObjects( scene.children );
-
-                    // On Object Process, Else Deselect All;
-                    if(intersects.length>0){qe=intersects[0].object.ix;f17()}else{f18();qt=0}
-                }
-            }
-
-            r9=1;
-        };
-
-        kh=new THREE.Euler(-0.5,0,0,'YXZ');kj=Math.PI/2;window.onmousemove=function(e)
-        {
-            if(e.buttons<2)
-            {
-                ga=(e.movementY+e.movementX)*0.5;
-
-                if(ax==1)
-                {
-                    i=0;while(i<gx){cr[g9[i]]+=ga;i+=1}f3();
-                }
-                else if(ax==2)
-                {
-                    i=0;while(i<gx){cr[g9[i]+1]+=ga;i+=1}f3();
-                }
-                else if(ax==3)
-                {
-                    i=0;while(i<gx){cr[g9[i]+2]+=ga;i+=1}f3();
-                }
-            }
-            else
-            {
-                r9=1;
-                
-                kh.y=(kh.y-e.movementX*0.005)%p2;if(kh.y<0){kh.y+=p2}kh.x=Math.max(kj-Math.PI,Math.min(kj,kh.x-e.movementY*0.005));
-                camera.quaternion.setFromEuler(kh);
-            }
-        };
-
-        // Function To Import STL File;
-        function f13(data)
-        {
-            // Format Check, ASCII Or Binary;
-            rz=new Uint8Array(data);k=i4;i=data.byteLength;if(rz[0]==115&&rz[1]==111&&rz[2]==108&&rz[3]==105&&rz[4]==100)
-            {
-                // Decode To String And Skip Data Until Next Line (\n);
-                j=new TextDecoder().decode(data);z=5;while(rz[z]!=10){z+=1}
-
-                while(z<i)
-                {
-                    // Skip Data Till Vertex;
-                    if(rz[z]==120&&rz[z+1]==32)
-                    {
-                        z+=2;a="";while(rz[z]!=32){a+=j[z];z+=1}cf[i4]=parseFloat(a);z+=1;
-                        a="";while(rz[z]!=32){a+=j[z];z+=1}cf[i4+1]=parseFloat(a);z+=1;
-                        a="";while(rz[z]!=10){a+=j[z];z+=1}cf[i4+2]=parseFloat(a);
-
-                        i4+=3;
-                    }
-
-                    z+=1;
-                }
-            }
-            else
-            {
-                // Import Binary STL Face Data;
-                j=new DataView(data);z=84;while(z<i)
-                {
-                    cf[i4]=j.getFloat32(z+16,1);cf[i4+1]=j.getFloat32(z+20,1);cf[i4+2]=j.getFloat32(z+12,1);
-                    cf[i4+3]=j.getFloat32(z+28,1);cf[i4+4]=j.getFloat32(z+32,1);cf[i4+5]=j.getFloat32(z+24,1);
-                    cf[i4+6]=j.getFloat32(z+40,1);cf[i4+7]=j.getFloat32(z+44,1);cf[i4+8]=j.getFloat32(z+36,1);
-
-                    z+=50;i4+=9;
-                }
-            }
-
-            f16();
-        }
-
-        // Export Binary STL File Of Active Meshes;
-        function f14()
-        {
-            j=new DataView(new ArrayBuffer(80+4+(50*i4/9)));j.setUint32(80,i4/9,1);z=84;
-
-            i=0;while(i<i4)
-            {
-                j.setFloat32(z+12,cf[i],1);j.setFloat32(z+16,cf[i+1],1);j.setFloat32(z+20,cf[i+2],1);
-                j.setFloat32(z+24,cf[i+3],1);j.setFloat32(z+28,cf[i+4],1);j.setFloat32(z+32,cf[i+5],1);
-                j.setFloat32(z+36,cf[i+6],1);j.setFloat32(z+40,cf[i+7],1);j.setFloat32(z+44,cf[i+8],1);
-
-                i+=9;z+=50;
-            }
-
-            a=document.createElement('a');a.href=url=URL.createObjectURL(new Blob([j],{type:'application/octet-stream'}));a.download='file.stl';a.click();URL.revokeObjectURL(url);
-        }
-
-        gd=gc*12;gh=gc*60-(gd/2);
-
-        function f15(axis,x,y,z,color)
-        {
-            g4.strokeStyle=g4.fillStyle=color;p3=(x0*x+x1*y+x2*z)*gh+dl;p4=dm-(x3*x+x4*y+x5*z)*gh;
-
-            g4.beginPath();g4.arc(p3,p4,gd,0,p2,0);g4.fill();
-            g4.beginPath();g4.moveTo(dl+(p3-dl)*0.2,dm+(p4-dm)*0.2);g4.lineTo(p3,p4);g4.lineCap="round";g4.lineWidth=gc*5;g4.stroke();
-            
-            let f=gc*12;g4.font=f+"px 'u'";g4.fillStyle="#000";g4.fillText(axis,p3-gc*4,p4+gc*4);
-        }
-
-        window.oncontextmenu=function(e){e.preventDefault()};
-        
-        // Render Loop;
-        function f0()
-        {
-            if(r9)
-            {
-                r9=0;
-
-                // Apply Camera Movement;
-                if(k0){camera.translateZ(-kx);r9=1}if(k1){camera.translateZ(kx);r9=1}if(k2){camera.translateX(-kx);r9=1}
-                if(k3){camera.translateX(kx);r9=1}if(k4){camera.translateY(kx);r9=1}if(k5){camera.translateY(-kx);r9=1}
-
-                // Orientation Gizmo;
-                g4.clearRect(g3.width-310,g3.height-310,400,400);
-
-                a=Math.cos(kh.x);b=Math.sin(kh.x);c=Math.cos(kh.y);d=Math.sin(kh.y);e=Math.cos(kh.z);f=Math.sin(kh.z);
-                x0=c*e;x1=-c*f;x2=d;x3=a*f+b*e*d;x4=a*e-b*f*d;x5=-b*c;if(kh.x<0){i=1;z=-1}else{i=-1;z=1}
-
-                f15("Y",0,z,0,"#178cf0");
-                if(kh.y>Math.PI){f15("X",1,0,0,"#f73c3c");f15("Z",0,0,1,"#6ccb26");f15("Z",0,0,-1,"#6ccb26");f15("X",-1,0,0,"#f73c3c")}else{f15("X",-1,0,0,"#f73c3c");f15("Z",0,0,-1,"#6ccb26");f15("Z",0,0,1,"#6ccb26");f15("X",1,0,0,"#f73c3c")}
-                f15("Y",0,i,0,"#178cf0");
-                
-                // Render Scene;
-                r0.render(scene,camera);
-            }
-
-            requestAnimationFrame(f0);
-        }r9=1;f0();
-    })();
-</script>
+            <select class="bn">
+              <option>Geometric Center</option>
+              <option>Orientation Cursor</option>
+              <option>Scene Origin</option>
+            </select>
+
+            <div style="position: absolute; right: 0.8rem; display: flex; pointer-events: none;">
+              <svg viewBox="0.25 0.25 35.5 20.75" style="width: 0.8rem; overflow: visible;"><use xlink:href="#bm"></svg>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <script src="static/subdivision.js"></script>
+  <script src="static/subd_aigen.js"></script>
+  
+  <script src="static/main.js"></script>
 </body>
 </html>
