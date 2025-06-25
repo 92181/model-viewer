@@ -35,6 +35,7 @@
       border-radius: 1.5rem;
       outline: none;
       width: 100%;
+      
     }
     #main {
       display: flex;
@@ -47,6 +48,7 @@
     #content {
       position: relative;
       display: flex;
+      /*max-height: 100%;*/
       height: 100%;
     }
     #sidebar {
@@ -149,9 +151,9 @@
       user-select: none;
       width: 100%;
 
-      & > *:first-child {
+      /*& > *:first-child {
         width: 100%;
-      }
+      }*/
     }
 
 
@@ -183,10 +185,10 @@
       </div>
 
       <svg viewBox="0 0 24 24" fill="none">
-        <path d="M3.38589 5.66687C2.62955 4.82155 2.25138 4.39889 2.23712 4.03968C2.22473 3.72764 2.35882 3.42772 2.59963 3.22889C2.87684 3 3.44399 3 4.57828 3H19.4212C20.5555 3 21.1227 3 21.3999 3.22889C21.6407 3.42772 21.7748 3.72764 21.7624 4.03968C21.7481 4.39889 21.3699 4.82155 20.6136 5.66687L14.9074 12.0444C14.7566 12.2129 14.6812 12.2972 14.6275 12.3931C14.5798 12.4781 14.5448 12.5697 14.5236 12.6648C14.4997 12.7721 14.4997 12.8852 14.4997 13.1113V18.4584C14.4997 18.6539 14.4997 18.7517 14.4682 18.8363C14.4403 18.911 14.395 18.9779 14.336 19.0315C14.2692 19.0922 14.1784 19.1285 13.9969 19.2012L10.5969 20.5612C10.2293 20.7082 10.0455 20.7817 9.89802 20.751C9.76901 20.7242 9.6558 20.6476 9.583 20.5377C9.49975 20.4122 9.49975 20.2142 9.49975 19.8184V13.1113C9.49975 12.8852 9.49975 12.7721 9.47587 12.6648C9.45469 12.5697 9.41971 12.4781 9.37204 12.3931C9.31828 12.2972 9.2429 12.2129 9.09213 12.0444L3.38589 5.66687Z" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" stroke="currentColor"/>
+        <path d="M4.5 22V17M4.5 7V2M2 4.5H7M2 19.5H7M13 3L11.2658 7.50886C10.9838 8.24209 10.8428 8.60871 10.6235 8.91709C10.4292 9.1904 10.1904 9.42919 9.91709 9.62353C9.60871 9.84281 9.24209 9.98381 8.50886 10.2658L4 12L8.50886 13.7342C9.24209 14.0162 9.60871 14.1572 9.91709 14.3765C10.1904 14.5708 10.4292 14.8096 10.6235 15.0829C10.8428 15.3913 10.9838 15.7579 11.2658 16.4911L13 21L14.7342 16.4911C15.0162 15.7579 15.1572 15.3913 15.3765 15.0829C15.5708 14.8096 15.8096 14.5708 16.0829 14.3765C16.3913 14.1572 16.7579 14.0162 17.4911 13.7342L22 12L17.4911 10.2658C16.7579 9.98381 16.3913 9.8428 16.0829 9.62353C15.8096 9.42919 15.5708 9.1904 15.3765 8.91709C15.1572 8.60871 15.0162 8.24209 14.7342 7.50886L13 3Z" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" stroke="currentColor"/>
       </svg>
       <svg style="margin-left: 0.9rem;" viewBox="0 0 24 24" fill="none">
-        <path d="M5 7.8C5 6.11984 5 5.27976 5.32698 4.63803C5.6146 4.07354 6.07354 3.6146 6.63803 3.32698C7.27976 3 8.11984 3 9.8 3H14.2C15.8802 3 16.7202 3 17.362 3.32698C17.9265 3.6146 18.3854 4.07354 18.673 4.63803C19 5.27976 19 6.11984 19 7.8V21L12 17L5 21V7.8Z" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" stroke="currentColor"/>
+        <path d="M20.4532 12.8928C20.1754 15.5027 18.6967 17.9484 16.2497 19.3612C12.1842 21.7084 6.98566 20.3155 4.63845 16.25L4.38845 15.817M3.54617 11.1071C3.82397 8.49723 5.30276 6.05151 7.74974 4.63874C11.8152 2.29153 17.0138 3.68447 19.361 7.74995L19.611 8.18297M3.49316 18.0659L4.22522 15.3339L6.95727 16.0659M17.0422 7.93398L19.7743 8.66603L20.5063 5.93398M11.9997 7.49995V12L14.4997 13.5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" stroke="currentColor"/>
       </svg>
       <svg style="margin-left: 0.9rem;" viewBox="0 0 24 24" fill="none">
         <path d="M12 15C13.6569 15 15 13.6569 15 12C15 10.3431 13.6569 9 12 9C10.3431 9 9 10.3431 9 12C9 13.6569 10.3431 15 12 15Z" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" stroke="#fff"></path>
@@ -227,7 +229,7 @@
       <div id="cntx">
         <div>
           <div></div>
-          <svg viewBox="0 0 24 24" fill="none" style="width: 22px; margin-left: auto; cursor: pointer;">
+          <svg onclick="cts();CanvasGL.focus()" viewBox="0 0 24 24" fill="none" style="width: 22px; margin-left: auto; cursor: pointer;">
             <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
           </svg>
         </div>
@@ -248,10 +250,7 @@
               <option>Z</option>
             </select>
 
-            <div style="position: absolute; right: 0.8rem; display: flex; pointer-events: none;">
-              <svg viewBox="0.25 0.25 35.5 20.75" style="width: 0.8rem; overflow: visible;"><use xlink:href="#bm"></svg>
-            </div>
-
+            <svg viewBox="0.25 0.25 35.5 20.75" style="width: 0.8rem; overflow: visible; position: absolute; right: 0.8rem;"><use xlink:href="#bm"></svg>
           </div>
 
           <div class="slct">
@@ -263,9 +262,7 @@
               <option>Scene Origin</option>
             </select>
 
-            <div style="position: absolute; right: 0.8rem; display: flex; pointer-events: none;">
-              <svg viewBox="0.25 0.25 35.5 20.75" style="width: 0.8rem; overflow: visible;"><use xlink:href="#bm"></svg>
-            </div>
+            <svg viewBox="0.25 0.25 35.5 20.75" style="width: 0.8rem; overflow: visible; position: absolute; right: 0.8rem;"><use xlink:href="#bm"></svg>
           </div>
         </div>
       </div>
