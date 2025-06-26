@@ -1,4 +1,7 @@
 # Tellurium - 3D Model Manipulator
+
+WIP
+
 A tiny 3D viewer with powerful, yet limited capability. It can be used as a simple 3D model manipulator.
 This project has it's origins as an advanced NURB modeler, however I decided to branch out a part of the program and created this project.
 
