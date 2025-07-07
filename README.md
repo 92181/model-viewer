@@ -1,7 +1,4 @@
 # Tellurium - 3D Model Manipulator
-
-WIP
-
 A tiny 3D viewer with powerful, yet limited capability. It can be used as a simple 3D model manipulator.
 This project has it's origins as an advanced NURB modeler, however I decided to branch out a part of the program and created this project.
 
@@ -41,11 +38,13 @@ python3 -m http.server // Access at localhost:8000
 
 ## The Future
 * Auto compute sharp edges for SubD (same as autosmooth blender with angle 30d for example);
+* History functionality, revert actions.
+* Make searchbar functional.
 
 ## License & Attribution
 This 3D manipulator is open-source and provided under the MIT attribution license.
 
--- Subd butterfly
+Using subdivision functionality from [CPSC 424 Assignment 7 2019WT1](https://github.com/thelittlejunglemirza/butterfly-mesh-subdivision).
 
 SVG icon collection "Ui Oval Interface Icons" (Public Domain);
 Made By Wolf Pieter Schulz.

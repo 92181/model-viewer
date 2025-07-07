@@ -1035,7 +1035,6 @@ function subdivider (input_mesh) {
         origEdgeTwin = origEdge.getTwin();
 
         // Check if the edge is creased
-        console.log(origEdge.getCrease());
         if(0) // origEdge.getCrease()
         {
           // Between the two original vertices of the edge.

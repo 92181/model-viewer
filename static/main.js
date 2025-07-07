@@ -1,11 +1,24 @@
-// Set Favicon;
+// Set Main Icon;
 qq='M23 55Q27 63 36 68 33 61 35 58C37 64 41 63 43 68 46 63 38 56 41 50 44 44 68 49 68 39 68 35 52 34 49 24Q39 16 44 4 41 5 39 7 39 4 37 0 30 7 25 17 13 16 7 21 13 20 16 21 3 25 0 37 5 32 9 31 3 43 9 55 9 46 12 42 13 54 27 67 22 58 23 55M37 18Q33 17 30 18 32 11 36 7 37 11 37 18M40 25Q46 27 48 31 41 30 40 25';
-document.querySelector("link").href=document.querySelector("[qn]").src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 68 68'%3E%3Cpath d='"+qq+"' fill='%23fff'/%3E%3C/svg%3E";
+
+document.querySelector("[qn]").innerHTML="<path d='"+qq+"' fill='currentColor'></path>";
+
+// Set Favicon;
+let qj="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 68 68'%3E%3Cpath d='"+qq+"' fill='%23";
+
+if(window.matchMedia("(prefers-color-scheme:dark)").matches) 
+{
+  document.querySelector("link").href=qj+"fff'/%3E%3C/svg%3E";
+}
+else
+{
+  document.querySelector("link").href=qj+"000'/%3E%3C/svg%3E";
+};
 
 // Get Canvas & Focus;
 const CanvasGL=document.querySelector("canvas");CanvasGL.focus();CanvasGL.oncontextmenu=function(e){e.preventDefault()};
 
-const g6=document.querySelector("input");r3=window.devicePixelRatio,lz=document.getElementById("elist");
+const sh=document.querySelector("#search input"),g6=document.querySelector("input"),r3=window.devicePixelRatio,lz=document.getElementById("elist");
 
 let p2=2*Math.PI,rd=Math.PI/180;
 
@@ -15,16 +28,97 @@ function inp(e)
   e.select();
 };
 
-// Push ALL to Git (Intermediate);
+// Handle Settings Menu;
+let fg=document.getElementById("setml").children,fc=document.getElementById("setll").children,fa=2,z=0;
 
-// Join Mesh & Delete Vertices
-// Custom origin cursor
-// Searchbar (press 'Key/')
-// Element.io like Settings Menu (Few Settings)
-// Add subdiv menu
-// try other Subdivision file
+while(z<fg.length)
+{
+  let g=z;
 
-// History Functionality, Save revert action. History is GLOBAL;
+  fg[g].onclick=function()
+  {
+    if(g!=fa)
+    {
+      fg[g].style.border="var(--brdr)";fg[fa].style.border="";
+
+      fc[g].style.display="flex";fc[fa].style.display="";
+
+      fa=g;
+    };
+  };
+
+  z+=1;
+};
+
+// Close And Open Setting Menu;
+const fi=document.getElementById("overlay"),fq=fi.children;
+
+function smo()
+{
+  fi.style.display="flex";
+};
+
+function smu()
+{
+  fi.style.display="";CanvasGL.focus();
+};
+
+// Configure Theme;
+function thm(p)
+{
+  let c,b,r,h=document.documentElement;
+
+  if(!p)
+  {
+    c="#000";b="#fff";r="#E6E6E6";
+  }
+  else if(p==1)
+  {
+    c="#fff";b="#0b0b0b";r="#303030";
+  }
+  else
+  {
+    c="#fff";b="#000";r="#1E1E1E";
+  };
+
+  h.style.setProperty("--main-color",c);h.style.setProperty("--bkgr-color",b);h.style.setProperty("--brdr-color",r);
+};
+
+thm(2);
+
+// Degree Settings;
+let dg=1;
+
+function deg(p)
+{
+  if(p){dg=1;}else{dg=0;};
+};
+
+// Initialize Radio Buttons;
+let rdb=document.querySelectorAll("#setmn .radio"),rdf=[thm,0,deg],s=0;
+
+while(s<rdb.length)
+{
+  let f=rdf[s],k=rdb[s].children,i=0;
+
+  while(i<k.length)
+  {
+    let j=i;
+
+    k[i].onclick=function()
+    { 
+      // Handle Button Style;
+      this.parentElement.querySelector("[style]").removeAttribute("style");this.style="border:var(--brdr)"; 
+      
+      // Trigger Logic;
+      f(j);
+    };
+
+    i+=1;
+  };
+
+  s+=1;
+};
 
 // Get Euclidean Distance Between Vectors;
 function ecd(dx,dy,dz)
@@ -90,7 +184,7 @@ function rot()
   let d=parseFloat(ci[0].value),x,y,z;
 
   // If True, Convert Radians To Degrees;
-  if(1){d*=rd;};
+  if(dg){d*=rd;};
 
   // Get Rotation Axis;
   if(!cr[0].selectedIndex)
@@ -185,23 +279,33 @@ function pav()
     a+=o.sc;e+=1;
   };
 
-  x/=a;y/=a;z/=a;
+  if(a)
+  {
+    return [x/a,y/a,z/a];
+  }
+  else
+  {
+    return [0,0,0];
+  };
+};
 
-  return [x,y,z];
+// Custom Origin Set;
+function cuo()
+{
+  lo=[parseFloat(ci[0].value),parseFloat(ci[1].value),parseFloat(ci[2].value)];
 };
 
 // Handle Origin Selection;
 function org()
 {
-  // 1: Geometric Center, 2: Custom Position, 3: Scene Origin;
+  // 1: Geometric Center, 2: Custom Origin, 3: Scene Origin;
   if(!cr[1].selectedIndex)
   {
     return pav();
   }
   else if(cr[1].selectedIndex==1)
   {
-    console.log("Not Yet Made!")
-    return [];
+    return lo;
   }
   else
   {
@@ -397,28 +501,35 @@ function f42(o,fe,fw)
   // Set Position And Calculate Normals;
   b.setAttribute('position',new THREE.Float32BufferAttribute(x,3));b.setAttribute('normal',new THREE.Float32BufferAttribute(cvn(x),3));
 
+  // Fill Selection Mode Array;
   let h=o.a;i=h.length;
 
-  if(h.length<z)
+  while(i<z)
   {
-    // Fill Selection Mode Array;
-    while(i<z)
-    {
-      h[i]=h[i+1]=h[i+2]=0;i+=3;
-    };
-
-    b.setAttribute('mode',new THREE.BufferAttribute(new Float32Array(h),1));
-
-    // Write Barycentric Coordinates;
-    const c=new Float32Array(z);
-  
-    while(v<z) 
-    {
-      c.set([1,0,0,0,1,0,0,0,1],v);v+=9;
-    };
-
-    b.setAttribute('center',new THREE.BufferAttribute(c,3));
+    h[i]=h[i+1]=h[i+2]=0;i+=3;
   };
+
+  b.setAttribute("mode",new THREE.BufferAttribute(new Float32Array(h),1));
+
+
+  b.computeBoundingSphere();b.computeBoundingBox();
+
+  let ty=b.getAttribute("center");
+  if(!ty||ty.array.length!=z)
+  {
+    // recalc
+  };
+
+
+  // Write Barycentric Coordinates;
+  const c=new Float32Array(z);
+
+  while(v<z)
+  {
+    c.set([1,0,0,0,1,0,0,0,1],v);v+=9;
+  };
+
+  b.setAttribute("center",new THREE.BufferAttribute(c,3));
 };
 
 // Drag Menu Item (Mesh);
@@ -522,8 +633,6 @@ function mad(fz,fw,t)
 // Deselect All Vertices For All Groups;
 function f40()
 {
-  console.log("Called something goes wrong!")
-
   let i=0,z=0;
   
   while(i<qw)
@@ -558,13 +667,23 @@ function f41(a,q,w){while(q<w/3){mode[q]=1;q+=1};qk[a].geometry.setAttribute('mo
 cv=[];cf=[];qk=[];qw=0;qm=[];qt=0;k6=0;
 
 // Import Model;
-g6.onchange=function(e) // to onchange
+g6.onchange=function(e)
 {
-  const f=e.target.files[0],r=new FileReader();
+  const f=e.target.files[0],n=f.name.split("."),r=new FileReader();
 
   r.onload=function(e)
   {
-    stl(e.target.result,f.name.split(".")[0]);
+    switch (n[1]) 
+    {
+      case "stl":
+      {
+        stl(e.target.result,n[0]);break;
+      }  
+      case "obj":
+      {
+        obj(e.target.result,n[0]);break;
+      }  
+    };
   };
 
   r.readAsArrayBuffer(f);
@@ -579,10 +698,10 @@ r0=new THREE.WebGLRenderer({alpha:true,antialias:true,canvas:CanvasGL});r0.setCl
 // Handle Resizing;
 function f2()
 {
-  CanvasGL.width=CanvasGL.height="";dw=CanvasGL.offsetWidth;dh=CanvasGL.clientHeight;
+  CanvasGL.style=CanvasGL.width=CanvasGL.height="";dw=CanvasGL.offsetWidth;dh=CanvasGL.clientHeight;
   
   // Set Canvas Dimensions;
-  camera.aspect=dw/dh;camera.updateProjectionMatrix();r0.setSize(dw,dh,false);
+  CanvasGL.style.width=dw+"px";camera.aspect=dw/dh;camera.updateProjectionMatrix();r0.setSize(dw,dh,false);
   
   r9=1;
 };
@@ -676,13 +795,21 @@ let gr=grd("2000.0","20.0","0.5,0.5,0.5",(2.3).toFixed(1)),li=lin("2000.0",(2.7)
 
 scene.add(gr);scene.add(li);
 
+// Remove Mesh;
+function rmm(e)
+{
+  let p=document.querySelector(`[mesh="`+e+`"]`);p.nextElementSibling.remove();p.remove();
+  
+  scene.remove(qk[e].mesh);qk[e].mesh.geometry.dispose();qk[e]={};
+};
+
 // Get Menu Elements;
 const cm=document.getElementById("cntx"),ct=cm.children[0].children[0],ch=cm.getElementsByClassName("cnt"); // Move!
 const ci=cm.querySelectorAll("input"); // Move!
 
 const cc=document.getElementsByClassName("slct"),cr=cm.querySelectorAll("select");
 
-let lx,fn;
+let lx,lo=[0,0,0],fn;
 
 // Cntx Menu Input Listeners;
 ci[0].onchange=ci[1].onchange=ci[2].onchange=cr[0].onchange=cr[1].onchange=function(){fn();};
@@ -690,7 +817,7 @@ ci[0].onchange=ci[1].onchange=ci[2].onchange=cr[0].onchange=cr[1].onchange=funct
 // Menu Close Function
 function cts()
 {
-  k6=0;cm.style="";
+  k6=0;cm.style="";CanvasGL.focus();
 };
 
 // Key Down;
@@ -705,8 +832,6 @@ window.onkeydown=function(e)
       {
         case "KeyN":
         {
-          console.log("TriggerN");
-
           let e=0,o;
 
           while(e<qw)
@@ -716,19 +841,12 @@ window.onkeydown=function(e)
             if(o.sc>0)
             {
               let cur_mesh = new Mesh(),cur_subdivider = subdivider(cur_mesh);
-              
               cur_mesh.builMesh(o.v,[],o.f);
-              //subdivider = new subdivider(cur_mesh);
-
               cur_mesh = cur_subdivider.subdivide(2);
-              
               let v=cur_mesh.exportMesh(),f=[];
-
               v.length=tin(v,f);
-              //mad(f,v,"Hey") // works
 
-              o.v=v;o.f=f;
-              f42(o,f,v);
+              o.v=v;o.f=f;f42(o,f,v);
             };
 
             e+=1;
@@ -756,20 +874,44 @@ window.onkeydown=function(e)
 
             if(o.sc>0)
             {
-              if(!y)
-              {
-                // save first selection;
-
-                y=1;
-              }
-              else
-              {
-                // Combine to first select!
-              };
+              y=o;e+=1;break;
             };
 
             e+=1;
           };
+
+          while(e<qw)
+          {
+            o=qk[e];
+
+            if(o.sc>0)
+            {
+              let h,l,n,x;
+
+              // Copy Vertices;
+              n=y.v.length;x=n/3;h=n+o.v.length;l=0;
+
+              while(n<h)
+              {
+                y.v[n]=o.v[l];n+=1;l+=1;
+              };
+
+              // Copy Faces;
+              n=y.f.length;h=n+o.f.length;l=0;
+
+              while(n<h)
+              {
+                y.f[n]=o.f[l]+x;n+=1;l+=1;
+              };
+
+              // Remove Combined Mesh;
+              rmm(e);
+            };
+
+            e+=1;
+          };
+
+          f42(y,y.f,y.v);r9=1;f40();
 
           break;
         }
@@ -811,31 +953,68 @@ window.onkeydown=function(e)
 
           while(e<qw)
           {
-            let g=qk[e];
+            let g=qk[e],f,v;
 
-            while(g.sc>0)
+            if(g.sc>0)
             {
-              // TODO
-              // g.s (contains vertice positions)
-              // Get selected and remove; rebuild index (g.f);
-              
-              // Get All Faces Of Vertice (Could Be Optimized: GLI);
-              let i=0,v=fe.length,z=g.s[g.sc-1];console.log(z);
+              f=g.f;v=g.v;
 
-              console.log(v); // indices or faces?
-
-              while(i<v)
+              // If All Vertices Selected;
+              if(g.sc==v.length/3)
               {
-                if(fe[i]==z){m[i]=j;};i+=1; // does not work, fix link select first!!! KeyL!
+                rmm(e);r9=1;e+=1;continue;
               };
 
-              g.sc-=1;
-            };
+              while(g.sc>0)
+              {
+                // Remove Vertice From Array;
+                let z=g.s[g.sc-1],i=z*3,h=v.length;
 
-            // If No Vertices Remaining;
-            if(g.v.length==0)
-            {
-              qk[e]={};scene.remove(g.mesh);g.mesh.geometry.dispose();
+                while(i<h)
+                {
+                  v[i]=v[i+3];v[i+1]=v[i+4];v[i+2]=v[i+5];
+
+                  i+=3;
+                };
+
+                g.v.length-=3;
+
+                // Get Faces And Remove Them (Could Be Optimized?: GLI);
+                let l=0;i=0;h=f.length;
+
+                while(l<h)
+                {
+                  while(f[l]==z||f[l+1]==z||f[l+2]==z)
+                  {
+                    l+=3;
+                  };
+
+                  // Shiftdown Faces;
+                  f[i]=f[l];f[i+1]=f[l+1];f[i+2]=f[l+2];
+
+                  // Lower Index;
+                  if(f[l]>z){f[i]-=1;};if(f[l+1]>z){f[i+1]-=1;};if(f[l+2]>z){f[i+2]-=1;};
+
+                  i+=3;l+=3;
+                };
+
+                g.f.length-=(l-i);l=0;
+
+                // Shiftdown Selection Array;
+                while(l<g.sc)
+                {
+                  if(g.s[l]>z)
+                  {
+                    g.s[l]-=1;
+                  };
+
+                  l+=1;
+                };
+
+                g.sc-=1;
+              };
+
+              g.a.length=0;f42(g,f,v);r9=1;
             };
 
             e+=1;
@@ -888,6 +1067,21 @@ window.onkeydown=function(e)
           
           break;
         }
+        case "KeyO":
+        {
+          if(k6==0||k6!=4)
+          {
+            // Set Menu;
+            ci[1].style=ci[2].style="";cm.style="display:block";ct.textContent="Custom Origin";ch[0].textContent="Origin";cc[0].style=cc[1].style="display:none";
+
+            // Set Input Values & Save Initial Position;
+            lx=pav();ci[0].value=lo[0];ci[1].value=lo[1];ci[2].value=lo[2];
+
+            fn=cuo;k6=4;
+          };
+          
+          break;
+        }
         case "ShiftLeft":{kx=4;break}
         case "KeyW":{k0=1;r9=1;break}
         case "KeyS":{k1=1;r9=1;break}
@@ -898,17 +1092,18 @@ window.onkeydown=function(e)
       };
     };
 
-    // Menu Actions;
-    if(k6>0)
+    switch(e.code)
     {
-      if(e.code=="Escape")
+      case "Slash":
       {
-        cts();e.preventDefault();
+        // Focus Searchbar;
+        sh.focus();e.preventDefault();break;
       }
-      else if(e.code=="Enter")
+      case "Escape":
+      case "Enter":
       {
-        console.log("Apply Action");
-      };
+        if(k6>0){cts();e.preventDefault();};break;
+      }
     };
   };
 };
