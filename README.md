@@ -10,7 +10,7 @@ Various things that it can do are...
 * Choose which mesh gets displayed and which will not, optimal for an efficient viewing experience.
 * Smoothen a mesh using the linear Butterfly subdivision scheme.
 
-You can view the [live demo](https://798.pages.dev/s/viewer) over at my personal site.
+You can view the [live demo](https://798.pages.dev/viewer) over at my personal site.
 
 ## Usage
 The 3D manipulator is at it's core an easy to use program to audit multiple 3D files at the same time. The key functionality can be accessed through the UI, or with the keybinds below. It supports some minor modeling workloads and can be also be used as a viewer.
